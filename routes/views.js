@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const SocialMetrics = require('../models/SocialMetrics');
 const catchAsync = require('../utils/catchAsync');
 const logger = require('../utils/logger');
+const socialMediaManager = require('../services/SocialMediaManager');
 
 // Home page
 router.get('/', (req, res) => {
@@ -57,5 +58,52 @@ router.get('/logout', (req, res) => {
     res.clearCookie('token');
     res.redirect('/');
 });
+
+// Admin route to manually collect metrics for a specific platform
+router.post('/api/collect/:platform', auth, catchAsync(async (req, res) => {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ 
+            error: 'Only administrators can manually collect metrics' 
+        });
+    }
+
+    const { platform } = req.params;
+    const validPlatforms = ['facebook', 'instagram', 'twitter', 'tiktok'];
+
+    if (!validPlatforms.includes(platform)) {
+        return res.status(400).json({ 
+            error: 'Invalid platform specified' 
+        });
+    }
+
+    try {
+        // Get the service for the specified platform
+        const service = socialMediaManager.services[platform];
+        
+        // Collect metrics for the platform
+        await socialMediaManager.collectMetricsForPlatform(platform, service);
+
+        logger.info(`Manual metrics collection completed for ${platform}`, {
+            userId: req.user._id,
+            platform
+        });
+
+        res.json({ 
+            success: true, 
+            message: `Successfully collected ${platform} metrics` 
+        });
+    } catch (error) {
+        logger.error(`Manual metrics collection failed for ${platform}`, {
+            userId: req.user._id,
+            platform,
+            error: error.message
+        });
+        
+        res.status(500).json({ 
+            error: `Failed to collect ${platform} metrics: ${error.message}` 
+        });
+    }
+}));
 
 module.exports = router; 

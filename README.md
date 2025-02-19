@@ -78,6 +78,55 @@ A comprehensive social media analytics dashboard built for Budget Las Vegas, pro
 - Social media API credentials
 - Development environment variables
 
+### API Credentials Setup
+
+#### TikTok
+1. Visit the [TikTok for Developers](https://developers.tiktok.com/) portal
+2. Create a new app in the Developer Console
+3. Enable the TikTok API
+4. Get your Access Token from the App Settings page
+5. Required permissions:
+   - user.info.basic
+   - video.list
+   - video.stats
+
+#### Facebook
+1. Go to [Facebook Developers](https://developers.facebook.com/)
+2. Create a new app (Business type)
+3. Add Facebook Login product
+4. Enable the Graph API
+5. Required permissions:
+   - pages_read_engagement
+   - pages_show_list
+   - ads_read
+   - business_management
+
+#### Instagram
+1. Use the [Facebook Developer Console](https://developers.facebook.com/)
+2. Enable Instagram Graph API
+3. Connect your Instagram Business Account
+4. Required permissions:
+   - instagram_basic
+   - instagram_manage_insights
+   - pages_show_list
+   - instagram_content_publish
+
+#### Twitter
+1. Visit [Twitter Developer Portal](https://developer.twitter.com/)
+2. Create a new Project and App
+3. Apply for Elevated access
+4. Required permissions:
+   - Tweet.read
+   - Users.read
+   - Tweet.write
+   - Offline.access
+
+### Rate Limits
+- TikTok: 2000 requests/day
+- Facebook: 200 requests/hour/user
+- Instagram: 240 requests/hour
+- Twitter: 500,000 tweets/month
+
 ### Installation
 1. Clone the repository
 2. Install dependencies with npm install
