@@ -3,24 +3,24 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        const token = req.cookies.token || req.header('Authorization')?.replace('Bearer ', '');
         
         if (!token) {
-            throw new Error('No authentication token found');
+            return res.redirect('/login');
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.userId);
 
         if (!user) {
-            throw new Error('User not found');
+            return res.redirect('/login');
         }
 
         req.user = user;
         req.token = token;
         next();
     } catch (error) {
-        res.status(401).json({ message: 'Please authenticate' });
+        res.redirect('/login');
     }
 };
 

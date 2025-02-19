@@ -61,16 +61,16 @@ router.post('/login', async (req, res) => {
         // Find user
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({ 
-                message: 'Invalid credentials' 
+            return res.render('login', { 
+                error: 'Invalid credentials' 
             });
         }
 
         // Verify password
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(401).json({ 
-                message: 'Invalid credentials' 
+            return res.render('login', { 
+                error: 'Invalid credentials' 
             });
         }
 
@@ -81,9 +81,19 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        res.json({ token });
+        // Set token in cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
+
+        // Redirect to dashboard
+        res.redirect('/dashboard');
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.render('login', { 
+            error: 'An error occurred during login' 
+        });
     }
 });
 

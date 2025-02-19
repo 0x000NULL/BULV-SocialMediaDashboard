@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
@@ -8,6 +9,8 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -17,10 +20,19 @@ app.use(express.static('public'));
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    family: 4
 })
 .then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.log('MongoDB connection error:', err));
+.catch(err => {
+    console.error('MongoDB connection error details:', {
+        message: err.message,
+        code: err.code,
+        address: process.env.MONGODB_URI
+    });
+    console.log('Server will continue running, but database features will not work');
+});
 
 // Routes
 const viewRoutes = require('./routes/views');
