@@ -122,7 +122,7 @@ const generatePlatformSpecific = (platform) => {
                 page_impressions: Math.floor(Math.random() * 500000),
                 page_engaged_users: Math.floor(Math.random() * 100000),
                 negative_feedback: Math.floor(Math.random() * 1000),
-                page_views: Math.floor(Math.random() * 200000),
+                page_views_total: Math.floor(Math.random() * 200000),
                 total_reactions: Math.floor(Math.random() * 300000),
                 video_metrics: Array.from({ length: 5 }, () => ({
                     video_id: new ObjectId().toString(),
@@ -218,6 +218,8 @@ const addTrends = (value, day) => {
 };
 
 const generateSampleMetrics = (platform, date, day) => {
+    const platformSpecific = generatePlatformSpecific(platform);
+    
     const baseMetrics = {
         platform,
         metrics: {
@@ -233,7 +235,7 @@ const generateSampleMetrics = (platform, date, day) => {
             impressions: Math.floor(Math.random() * 2000000),
             audience_demographics: generateDemographics(),
             content_performance: generateContentPerformance(),
-            platform_specific: generatePlatformSpecific(platform)
+            platform_specific: platformSpecific
         },
         post_frequency: {
             daily: Math.floor(Math.random() * 10),

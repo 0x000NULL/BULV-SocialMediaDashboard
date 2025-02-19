@@ -24,7 +24,12 @@ router.get('/dashboard', auth, catchAsync(async (req, res) => {
         for (const platform of platforms) {
             const latestMetric = await SocialMetrics.findOne({ platform })
                 .sort({ timestamp: -1 });
-            metrics[platform] = latestMetric?.metrics || null;
+            metrics[platform] = latestMetric || null;
+            // Debug output for each platform's metrics
+            console.log(`\n${platform.toUpperCase()} METRICS:`, {
+                platform_specific: latestMetric?.metrics?.platform_specific,
+                full_structure: latestMetric
+            });
         }
 
         logger.info('Dashboard accessed', {

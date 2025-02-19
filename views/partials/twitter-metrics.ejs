@@ -1,0 +1,29 @@
+<div class="row">
+    <div class="col-md-6">
+        <h5>Tweet Performance</h5>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mentions</td>
+                        <td><%= metrics?.metrics?.platform_specific?.mentions_count?.toLocaleString() || 0 %></td>
+                    </tr>
+                    <tr>
+                        <td>Average Impressions</td>
+                        <td><%= metrics?.metrics?.platform_specific?.tweet_metrics?.average_impressions?.toLocaleString() || 0 %></td>
+                    </tr>
+                    <tr>
+                        <td>Reply Rate</td>
+                        <td><%= (metrics?.metrics?.platform_specific?.tweet_metrics?.reply_rate || 0).toFixed(2) %>%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> 

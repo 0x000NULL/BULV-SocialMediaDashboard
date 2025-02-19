@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+const { Schema, model } = require('mongoose');
 
-const socialMetricsSchema = new mongoose.Schema({
+const socialMetricsSchema = new Schema({
     platform: {
         type: String,
         required: true,
@@ -72,112 +72,7 @@ const socialMetricsSchema = new mongoose.Schema({
         },
 
         // Platform-specific metrics
-        platform_specific: {
-            instagram: {
-                story_metrics: [{
-                    story_id: String,
-                    type: {
-                        type: String,
-                        enum: ['photo', 'video']
-                    },
-                    impressions: Number,
-                    reach: Number,
-                    exits: Number,
-                    replies: Number,
-                    timestamp: Date
-                }],
-                reel_metrics: [{
-                    reel_id: String,
-                    plays: Number,
-                    reach: Number,
-                    likes: Number,
-                    comments: Number,
-                    shares: Number,
-                    saves: Number
-                }],
-                media_types: {
-                    image_count: Number,
-                    video_count: Number,
-                    carousel_count: Number,
-                    reels_count: Number,
-                    story_count: Number
-                }
-            },
-            facebook: {
-                page_impressions: Number,
-                page_engaged_users: Number,
-                negative_feedback: Number,
-                page_views: Number,
-                total_reactions: Number,
-                video_metrics: [{
-                    video_id: String,
-                    title: String,
-                    views: Number,
-                    duration: Number,
-                    avg_watch_time: Number,
-                    retention_rate: Number
-                }],
-                event_metrics: [{
-                    event_id: String,
-                    name: String,
-                    attending: Number,
-                    interested: Number,
-                    declined: Number
-                }],
-                ad_metrics: [{
-                    ad_id: String,
-                    campaign_name: String,
-                    impressions: Number,
-                    clicks: Number,
-                    spend: Number,
-                    actions: [{
-                        action_type: String,
-                        value: Number
-                    }]
-                }]
-            },
-            tiktok: {
-                average_watch_time: Number,
-                completion_rate: Number,
-                sound_usage: [{
-                    title: String,
-                    author: String,
-                    usage_count: Number,
-                    average_views: Number,
-                    average_engagement: Number
-                }],
-                video_metrics: [{
-                    video_id: String,
-                    views: Number,
-                    likes: Number,
-                    comments: Number,
-                    shares: Number,
-                    watch_time: Number,
-                    completion_rate: Number
-                }]
-            },
-            twitter: {
-                verified_status: Boolean,
-                mentions_count: Number,
-                tweet_metrics: {
-                    average_impressions: Number,
-                    average_engagement: Number,
-                    reply_rate: Number,
-                    quote_rate: Number,
-                    top_topics: [{
-                        topic: String,
-                        count: Number,
-                        engagement_rate: Number
-                    }],
-                    hashtag_performance: [{
-                        tag: String,
-                        usage: Number,
-                        avg_engagement: Number,
-                        avg_impressions: Number
-                    }]
-                }
-            }
-        }
+        platform_specific: Schema.Types.Mixed
     },
 
     // Post frequency tracking
@@ -216,4 +111,4 @@ socialMetricsSchema.index({ platform: 1, timestamp: -1 });
 socialMetricsSchema.index({ platform: 1, 'metrics.engagement_rate': -1 });
 socialMetricsSchema.index({ timestamp: -1 });
 
-module.exports = mongoose.model('SocialMetrics', socialMetricsSchema); 
+module.exports = model('SocialMetrics', socialMetricsSchema); 
