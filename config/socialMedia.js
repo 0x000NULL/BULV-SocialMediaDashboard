@@ -24,7 +24,7 @@ const config = {
         baseUrl: 'https://api.twitter.com/2',
         rateLimit: {
             windowMs: 15 * 60 * 1000, // 15 minutes
-            maxRequests: 180
+            maxRequests: 450
         }
     }
 };

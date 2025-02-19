@@ -1,29 +1,92 @@
 const BaseService = require('./BaseService');
 const socialMediaConfig = require('../config/socialMedia');
+const axios = require('axios');
+const logger = require('../utils/logger');
 
 class TwitterService extends BaseService {
     constructor() {
         super('twitter', socialMediaConfig.twitter);
-        this.bearerToken = process.env.TWITTER_API_KEY;
+        this.apiKey = process.env.TWITTER_API_KEY;
+        this.apiSecret = process.env.TWITTER_API_SECRET;
+        this.bearerToken = null;
+        this.initializeAuth().catch(error => {
+            logger.error('Failed to initialize Twitter service:', {
+                error: error.message,
+                stack: error.stack
+            });
+        });
+    }
+
+    async initializeAuth() {
+        try {
+            logger.info('Initializing Twitter authentication...');
+            const tokenUrl = 'https://api.twitter.com/oauth2/token';
+            const credentials = Buffer.from(`${this.apiKey}:${this.apiSecret}`).toString('base64');
+            
+            logger.debug('Making token request...', { url: tokenUrl });
+            const response = await axios({
+                method: 'POST',
+                url: tokenUrl,
+                headers: {
+                    'Authorization': `Basic ${credentials}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                data: 'grant_type=client_credentials'
+            });
+
+            if (!response.data || !response.data.access_token) {
+                throw new Error('Invalid token response from Twitter');
+            }
+
+            this.bearerToken = response.data.access_token;
+            logger.info('Twitter authentication initialized successfully');
+        } catch (error) {
+            logger.error('Failed to initialize Twitter authentication:', {
+                error: error.message,
+                response: error.response?.data,
+                stack: error.stack
+            });
+            throw error;
+        }
     }
 
     async getMetrics() {
         try {
+            if (!this.bearerToken) {
+                logger.info('No bearer token found, initializing authentication...');
+                await this.initializeAuth();
+            }
+
+            logger.debug('Making request to get user ID...');
+            const userResponse = await this.makeRequest('/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${this.bearerToken}`
+                }
+            });
+
+            if (!userResponse?.data?.id) {
+                throw new Error('Failed to get user ID from Twitter');
+            }
+
+            const userId = userResponse.data.id;
+            logger.debug('Got user ID', { userId });
+
+            // Then get the user's metrics using the ID
             const [userData, tweets, metrics] = await Promise.all([
-                this.makeRequest('/users/me', {
+                this.makeRequest(`/users/${userId}`, {
                     headers: { 'Authorization': `Bearer ${this.bearerToken}` },
                     params: {
-                        'user.fields': 'public_metrics,profile_views,verified'
+                        'user.fields': 'public_metrics,verified'
                     }
                 }),
-                this.makeRequest('/users/me/tweets', {
+                this.makeRequest(`/users/${userId}/tweets`, {
                     headers: { 'Authorization': `Bearer ${this.bearerToken}` },
                     params: {
                         'max_results': 100,
                         'tweet.fields': 'public_metrics,referenced_tweets,context_annotations,entities'
                     }
                 }),
-                this.makeRequest('/users/me/mentions', {
+                this.makeRequest(`/users/${userId}/mentions`, {
                     headers: { 'Authorization': `Bearer ${this.bearerToken}` },
                     params: {
                         'max_results': 100
@@ -31,14 +94,19 @@ class TwitterService extends BaseService {
                 })
             ]);
 
+            // Log successful responses
+            logger.debug('Got Twitter API responses', {
+                hasUserData: !!userData,
+                hasTweets: !!tweets,
+                hasMentions: !!metrics
+            });
+
             const tweetAnalytics = this.analyzeTweets(tweets.data);
 
             return {
                 followers: userData.data.public_metrics.followers_count,
                 following: userData.data.public_metrics.following_count,
                 tweets: userData.data.public_metrics.tweet_count,
-                // New metrics
-                profile_views: userData.data.profile_views,
                 verified_status: userData.data.verified,
                 mentions_count: metrics.meta.result_count,
                 tweet_analytics: {
@@ -53,7 +121,12 @@ class TwitterService extends BaseService {
                 }
             };
         } catch (error) {
-            throw new Error(`Failed to fetch Twitter metrics: ${error.message}`);
+            logger.error('Failed to fetch Twitter metrics:', {
+                error: error.message,
+                response: error.response?.data,
+                stack: error.stack
+            });
+            throw error;
         }
     }
 

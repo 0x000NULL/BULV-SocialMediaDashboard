@@ -2,6 +2,23 @@ const logger = require('../utils/logger');
 const AppError = require('../utils/AppError');
 
 const apiErrorHandler = (err, req, res, next) => {
+    logger.error('API Error:', {
+        error: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method,
+        body: req.body,
+        query: req.query
+    });
+
+    // Handle specific API errors
+    if (err.response?.data) {
+        logger.error('API Response Error:', {
+            status: err.response.status,
+            data: err.response.data
+        });
+    }
+
     if (req.path.startsWith('/api/')) {
         // Convert known errors to AppError
         if (err.name === 'ValidationError') {
