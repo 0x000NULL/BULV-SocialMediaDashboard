@@ -191,7 +191,7 @@ const generatePlatformSpecific = (platform) => {
                     reply_rate: faker.datatype.float({ min: 0.1, max: 2 }),
                     quote_rate: faker.datatype.float({ min: 0.5, max: 3 }),
                     top_topics: Array.from({ length: 5 }, () => ({
-                        tweet_id: `tweet_${faker.random.alphanumeric(10)}`,
+                        tweet_id: `tweet_${faker.datatype.uuid().slice(0, 10)}`,
                         text: faker.lorem.sentence(),
                         likes: faker.datatype.number({ min: 100, max: 5000 }),
                         retweets: faker.datatype.number({ min: 10, max: 1000 }),
