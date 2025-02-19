@@ -7,6 +7,7 @@ const errorHandler = require('./middleware/errorHandler');
 const requestLogger = require('./middleware/requestLogger');
 const securityLogger = require('./middleware/securityLogger');
 const apiErrorHandler = require('./middleware/apiErrorHandler');
+const metricsScheduler = require('./services/MetricsScheduler');
 
 const app = express();
 
@@ -59,6 +60,19 @@ app.use((req, res, next) => {
 
 // Error handling middleware (should be last)
 app.use(errorHandler);
+
+// Start the metrics scheduler
+if (process.env.NODE_ENV !== 'test') {
+    metricsScheduler.start();
+}
+
+// Add graceful shutdown
+process.on('SIGTERM', async () => {
+    logger.info('SIGTERM received. Starting graceful shutdown');
+    metricsScheduler.stop();
+    // ... other cleanup ...
+    process.exit(0);
+});
 
 // Add error monitoring for uncaught exceptions
 process.on('uncaughtException', (error) => {
