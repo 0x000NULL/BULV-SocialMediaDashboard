@@ -22,6 +22,20 @@ router.get('/metrics/:platform', auth, catchAsync(async (req, res) => {
     res.json(metrics);
 }));
 
+// Get metrics with date range
+router.get('/metrics/range', auth, catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query;
+    
+    const metrics = await SocialMetrics.find({
+        timestamp: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        }
+    }).sort({ timestamp: 1 });
+    
+    res.json(metrics);
+}));
+
 // Add new metrics
 router.post('/metrics', auth, catchAsync(async (req, res) => {
     const metrics = new SocialMetrics({

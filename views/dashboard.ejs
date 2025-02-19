@@ -44,20 +44,257 @@
             </div>
         </div>
 
-        <!-- Charts -->
-        <div class="col-md-6">
+        <!-- Date Range Picker -->
+        <div class="col-md-12 mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Follower Growth</h5>
-                    <canvas id="followerGrowthChart"></canvas>
+                    <form id="dateRangeForm" class="row g-3">
+                        <div class="col-auto">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="col-auto">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                        <div class="col-auto">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary d-block">Update</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Engagement Rates</h5>
-                    <canvas id="engagementChart"></canvas>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Follower Growth</h5>
+                        <div class="chart-container">
+                            <canvas id="followerGrowthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Engagement Rates</h5>
+                        <div class="chart-container">
+                            <canvas id="engagementChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Metrics Sections -->
+        <div class="col-md-12">
+            <div class="row">
+                <!-- Audience Demographics -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Audience Demographics</h5>
+                            <ul class="nav nav-tabs" id="demographicsTabs" role="tablist">
+                                <% ['gender', 'age', 'location', 'language'].forEach((tab, index) => { %>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link <%= index === 0 ? 'active' : '' %>" 
+                                                id="<%= tab %>-tab" 
+                                                data-bs-toggle="tab" 
+                                                data-bs-target="#<%= tab %>-content" 
+                                                type="button" 
+                                                role="tab">
+                                            <%= tab.charAt(0).toUpperCase() + tab.slice(1) %>
+                                        </button>
+                                    </li>
+                                <% }); %>
+                            </ul>
+                            <div class="tab-content mt-3" id="demographicsContent">
+                                <% ['gender', 'age', 'location', 'language'].forEach((tab, index) => { %>
+                                    <div class="tab-pane fade <%= index === 0 ? 'show active' : '' %>" 
+                                         id="<%= tab %>-content" 
+                                         role="tabpanel">
+                                        <div class="chart-wrapper">
+                                            <canvas id="<%= tab %>Chart"></canvas>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content Performance -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Content Performance</h5>
+                            <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" 
+                                            id="mediaStats-tab"
+                                            role="tab"
+                                            aria-controls="mediaStats"
+                                            aria-selected="true"
+                                            data-bs-toggle="tab" 
+                                            data-bs-target="#mediaStats">
+                                        Media Stats
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#hashtags">
+                                        Top Hashtags
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#postTiming">
+                                        Best Times
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="tab-content mt-3">
+                                <div class="tab-pane fade show active" id="mediaStats" role="tabpanel">
+                                    <div class="chart-wrapper">
+                                        <canvas id="mediaStatsChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="hashtags" role="tabpanel">
+                                    <div class="chart-wrapper">
+                                        <canvas id="hashtagsChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="postTiming" role="tabpanel">
+                                    <div class="chart-wrapper">
+                                        <canvas id="postTimingChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Platform-Specific Metrics -->
+                <div class="col-md-12 mb-4">
+                    <div class="card">
+                        <div class="card-body platform-specific-container">
+                            <h5 class="card-title">Platform-Specific Insights</h5>
+                            <div class="platform-tabs-wrapper">
+                                <ul class="nav nav-tabs" id="platformTabs" role="tablist">
+                                    <% ['tiktok', 'facebook', 'instagram', 'twitter'].forEach((platform, index) => { %>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link <%= index === 0 ? 'active' : '' %>"
+                                                    id="<%= platform %>-tab"
+                                                    role="tab"
+                                                    aria-controls="<%= platform %>-metrics"
+                                                    aria-selected="<%= index === 0 ? 'true' : 'false' %>"
+                                                    data-bs-toggle="tab" 
+                                                    data-bs-target="#<%= platform %>-metrics">
+                                                <%= platform.charAt(0).toUpperCase() + platform.slice(1) %>
+                                            </button>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                                <div class="tab-content mt-3">
+                                    <div class="platform-metrics-content">
+                                        <!-- TikTok Metrics -->
+                                        <div class="tab-pane fade show active" id="tiktok-metrics" role="tabpanel" aria-labelledby="tiktok-tab">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="chart-wrapper">
+                                                        <h6>Video Performance</h6>
+                                                        <canvas id="tiktokVideoMetricsChart"></canvas>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="chart-wrapper">
+                                                        <h6>Sound Usage</h6>
+                                                        <canvas id="tiktokSoundUsageChart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Facebook Metrics -->
+                                        <div class="tab-pane fade" id="facebook-metrics">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <h6>Page Performance</h6>
+                                                    <canvas id="facebookPageMetricsChart"></canvas>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h6>Video Performance</h6>
+                                                    <canvas id="facebookVideoMetricsChart"></canvas>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h6>Event Performance</h6>
+                                                    <canvas id="facebookEventMetricsChart"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Instagram Metrics -->
+                                        <div class="tab-pane fade" id="instagram-metrics">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <h6>Story Performance</h6>
+                                                    <canvas id="instagramStoryMetricsChart"></canvas>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h6>Reel Performance</h6>
+                                                    <canvas id="instagramReelMetricsChart"></canvas>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h6>Media Distribution</h6>
+                                                    <canvas id="instagramMediaTypesChart"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Twitter Metrics -->
+                                        <div class="tab-pane fade" id="twitter-metrics">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6>Tweet Performance</h6>
+                                                    <canvas id="twitterTweetMetricsChart"></canvas>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Top Topics</h6>
+                                                    <canvas id="twitterTopicsChart"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Post Frequency Analysis -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Post Frequency</h5>
+                            <div class="chart-wrapper">
+                                <canvas id="postFrequencyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Performance Metrics -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">API Performance</h5>
+                            <div class="chart-wrapper">
+                                <canvas id="apiPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
