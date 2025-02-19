@@ -4,6 +4,7 @@ const logger = require('../utils/logger');
 const readline = require('readline');
 require('dotenv').config();
 const { Types: { ObjectId } } = mongoose;
+const faker = require('faker');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -182,23 +183,26 @@ const generatePlatformSpecific = (platform) => {
             };
         case 'twitter':
             return {
-                verified_status: Math.random() > 0.5,
-                mentions_count: Math.floor(Math.random() * 1000),
+                verified_status: false,
+                mentions_count: faker.datatype.number({ min: 50, max: 100 }),
                 tweet_metrics: {
-                    average_impressions: Math.floor(Math.random() * 5000),
-                    average_engagement: Math.random() * 10,
-                    reply_rate: Math.random() * 5,
-                    quote_rate: Math.random() * 3,
-                    top_topics: Array.from({ length: 5 }, (_, i) => ({
-                        topic: `Trending Topic ${i + 1}`,
-                        count: Math.floor(Math.random() * 100),
-                        engagement_rate: Math.random() * 15
+                    average_impressions: faker.datatype.float({ min: 1000, max: 5000 }),
+                    average_engagement: faker.datatype.float({ min: 1, max: 8 }),
+                    reply_rate: faker.datatype.float({ min: 0.1, max: 2 }),
+                    quote_rate: faker.datatype.float({ min: 0.5, max: 3 }),
+                    top_topics: Array.from({ length: 5 }, () => ({
+                        tweet_id: `tweet_${faker.random.alphanumeric(10)}`,
+                        text: faker.lorem.sentence(),
+                        likes: faker.datatype.number({ min: 100, max: 5000 }),
+                        retweets: faker.datatype.number({ min: 10, max: 1000 }),
+                        replies: faker.datatype.number({ min: 5, max: 500 }),
+                        impressions: faker.datatype.number({ min: 1000, max: 10000 }),
+                        timestamp: faker.date.recent(7)
                     })),
-                    hashtag_performance: Array.from({ length: 8 }, (_, i) => ({
-                        tag: `#viral${i + 1}`,
-                        usage: Math.floor(Math.random() * 500),
-                        avg_engagement: Math.random() * 8,
-                        avg_impressions: Math.floor(Math.random() * 3000)
+                    hashtag_performance: Array.from({ length: 5 }, () => ({
+                        tag: `#${faker.random.word()}`,
+                        usage_count: faker.datatype.number({ min: 10, max: 100 }),
+                        engagement_rate: faker.datatype.float({ min: 0.1, max: 5 })
                     }))
                 }
             };

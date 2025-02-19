@@ -192,4 +192,22 @@ MIT License
 See changelog.md for detailed version history
 
 ## Support
-For support, please open an issue in the repository 
+For support, please open an issue in the repository
+
+## Post List Implementation
+
+The post list feature displays social media posts with their metrics and provides
+direct links to view them on their respective platforms. URLs are pre-generated
+during data preparation for optimal performance and maintainability.
+
+### Key Features:
+- Pagination support
+- Platform-specific post types
+- Embedded post previews
+- Direct platform links
+
+### Implementation Details:
+- URLs are generated server-side
+- Templates receive complete data objects
+- Error handling for missing data
+- Performance optimized rendering 

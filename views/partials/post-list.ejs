@@ -1,3 +1,13 @@
+<%# 
+  Post List Partial
+  Displays a paginated list of social media posts with metrics
+  
+  Expected data:
+  - posts: Array of post objects with pre-generated URLs
+  - currentPage: Current page number
+  - totalPages: Total number of pages
+  - platform: Current platform name
+%>
 <div class="post-list">
     <div class="table-responsive">
         <table class="table">
@@ -7,12 +17,18 @@
                     <th>Type</th>
                     <th>Metrics</th>
                     <th>Posted</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <% posts.forEach(post => { %>
                     <tr>
-                        <td><%= post.id %></td>
+                        <td>
+                            <button class="btn btn-link" 
+                                onclick="openPostModal('<%= platform %>', '<%= post.id %>', '<%= post.type %>')">
+                                <%= post.id.substring(0, 8) %>...
+                            </button>
+                        </td>
                         <td>
                             <% if (post.type === 'video') { %>
                                 <i class="fas fa-video"></i>
@@ -50,6 +66,19 @@
                             </div>
                         </td>
                         <td><%= new Date(post.timestamp).toLocaleString() %></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary"
+                                    onclick="openPostModal('<%= platform %>', '<%= post.id %>', '<%= post.type %>')">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                                <a href="<%= post.url %>" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-external-link-alt"></i> View
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                 <% }) %>
             </tbody>

@@ -28,3 +28,39 @@ body {
 .post-list .pagination {
     margin-top: 1rem;
 }
+
+/* Post modal styles */
+.modal-lg {
+    max-width: 800px;
+}
+
+.post-preview {
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.post-engagement {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border-top: 1px solid #dee2e6;
+}
+
+.post-engagement .metric {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Platform-specific embed containers */
+.tiktok-embed,
+.instagram-embed,
+.facebook-embed,
+.twitter-embed {
+    border-radius: 8px;
+    background: #fff;
+    margin: 0 auto;
+    display: block;
+}
