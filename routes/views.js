@@ -106,4 +106,122 @@ router.post('/api/collect/:platform', auth, catchAsync(async (req, res) => {
     }
 }));
 
+// Get posts for a platform with pagination
+router.get('/api/posts/:platform', auth, catchAsync(async (req, res) => {
+    const { platform } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    try {
+        const latestMetric = await SocialMetrics.findOne({ platform })
+            .sort({ timestamp: -1 });
+
+        if (!latestMetric) {
+            return res.status(404).json({ error: 'No metrics found for platform' });
+        }
+
+        let posts = [];
+        let totalPosts = 0;
+
+        switch (platform) {
+            case 'tiktok':
+                posts = (latestMetric.metrics?.platform_specific?.video_metrics || []).map(post => ({
+                    ...post,
+                    timestamp: post.timestamp || latestMetric.timestamp,
+                    type: 'video'
+                }));
+                totalPosts = posts.length;
+                posts = posts.slice(skip, skip + limit);
+                break;
+            case 'facebook':
+                const videos = (latestMetric.metrics?.platform_specific?.video_metrics || []).map(post => ({
+                    ...post,
+                    timestamp: post.timestamp || latestMetric.timestamp,
+                    type: 'video'
+                }));
+                const events = (latestMetric.metrics?.platform_specific?.event_metrics || []).map(post => ({
+                    ...post,
+                    timestamp: post.timestamp || latestMetric.timestamp,
+                    type: 'event'
+                }));
+                posts = [...videos, ...events];
+                totalPosts = posts.length;
+                posts = posts.slice(skip, skip + limit);
+                break;
+            case 'instagram':
+                const stories = (latestMetric.metrics?.platform_specific?.story_metrics || []).map(post => ({
+                    ...post,
+                    timestamp: post.timestamp || latestMetric.timestamp,
+                    type: 'story'
+                }));
+                const reels = (latestMetric.metrics?.platform_specific?.reel_metrics || []).map(post => ({
+                    ...post,
+                    timestamp: post.timestamp || latestMetric.timestamp,
+                    type: 'reel'
+                }));
+                posts = [...stories, ...reels];
+                totalPosts = posts.length;
+                posts = posts.slice(skip, skip + limit);
+                break;
+            case 'twitter':
+                posts = (latestMetric.metrics?.platform_specific?.tweet_metrics?.top_topics || []).map(post => ({
+                    ...post,
+                    timestamp: post.timestamp || latestMetric.timestamp,
+                    type: 'tweet'
+                }));
+                totalPosts = posts.length;
+                posts = posts.slice(skip, skip + limit);
+                break;
+        }
+
+        res.json({
+            posts,
+            currentPage: page,
+            totalPages: Math.ceil(totalPosts / limit),
+            totalPosts
+        });
+    } catch (error) {
+        logger.error('Failed to fetch posts', {
+            platform,
+            error: error.message,
+            userId: req.user._id
+        });
+        res.status(500).json({ error: 'Failed to fetch posts' });
+    }
+}));
+
+// Render post-list partial
+router.post('/partials/post-list', auth, catchAsync(async (req, res) => {
+    const { posts, currentPage, totalPages, platform } = req.body;
+    res.render('partials/post-list', { 
+        posts: posts.map(post => ({
+            ...post,
+            type: getPostType(platform, post),
+            id: post.video_id || post.story_id || post.reel_id || post.tweet_id || post.id
+        })),
+        currentPage,
+        totalPages,
+        platform
+    });
+}));
+
+// Helper function to determine post type
+function getPostType(platform, post) {
+    switch (platform) {
+        case 'tiktok':
+            return 'video';
+        case 'facebook':
+            return post.type || 'post';
+        case 'instagram':
+            if (post.story_id) return 'story';
+            if (post.reel_id) return 'reel';
+            return post.type || 'post';
+        case 'twitter':
+            return 'tweet';
+        default:
+            return 'post';
+    }
+}
+
 module.exports = router; 

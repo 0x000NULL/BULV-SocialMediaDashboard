@@ -1,0 +1,88 @@
+<div class="post-list">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Metrics</th>
+                    <th>Posted</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% posts.forEach(post => { %>
+                    <tr>
+                        <td><%= post.id %></td>
+                        <td>
+                            <% if (post.type === 'video') { %>
+                                <i class="fas fa-video"></i>
+                            <% } else if (post.type === 'photo') { %>
+                                <i class="fas fa-image"></i>
+                            <% } else if (post.type === 'story') { %>
+                                <i class="fas fa-circle"></i>
+                            <% } else { %>
+                                <i class="fas fa-file-alt"></i>
+                            <% } %>
+                            <%= post.type %>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-3">
+                                <% if (post.views) { %>
+                                    <span title="Views">
+                                        <i class="fas fa-eye"></i> <%= post.views.toLocaleString() %>
+                                    </span>
+                                <% } %>
+                                <% if (post.likes) { %>
+                                    <span title="Likes">
+                                        <i class="fas fa-heart"></i> <%= post.likes.toLocaleString() %>
+                                    </span>
+                                <% } %>
+                                <% if (post.comments) { %>
+                                    <span title="Comments">
+                                        <i class="fas fa-comment"></i> <%= post.comments.toLocaleString() %>
+                                    </span>
+                                <% } %>
+                                <% if (post.shares) { %>
+                                    <span title="Shares">
+                                        <i class="fas fa-share"></i> <%= post.shares.toLocaleString() %>
+                                    </span>
+                                <% } %>
+                            </div>
+                        </td>
+                        <td><%= new Date(post.timestamp).toLocaleString() %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+        <nav aria-label="Post navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="#" 
+                       onclick="loadPosts('<%= platform %>', <%= currentPage - 1 %>)">
+                        Previous
+                    </a>
+                </li>
+                
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                        <a class="page-link" href="#" 
+                           onclick="loadPosts('<%= platform %>', <%= i %>)">
+                            <%= i %>
+                        </a>
+                    </li>
+                <% } %>
+                
+                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                    <a class="page-link" href="#" 
+                       onclick="loadPosts('<%= platform %>', <%= currentPage + 1 %>)">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    <% } %>
+</div> 

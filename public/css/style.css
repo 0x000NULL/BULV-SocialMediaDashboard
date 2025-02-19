@@ -11,3 +11,20 @@ body {
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* Post list styles */
+.post-list {
+    margin-top: 1rem;
+}
+
+.post-list .table td {
+    vertical-align: middle;
+}
+
+.post-list .fas {
+    margin-right: 0.5rem;
+}
+
+.post-list .pagination {
+    margin-top: 1rem;
+}

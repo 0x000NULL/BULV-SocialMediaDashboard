@@ -18,11 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(requestLogger);
 app.use(securityLogger);
+app.use(express.static('public'));
 
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', './views');
-app.use(express.static('public'));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {

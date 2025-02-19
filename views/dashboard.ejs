@@ -175,45 +175,7 @@
     </div>
 </div>
 
-<!-- Add Chart.js initialization -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize any charts or interactive elements here
-});
-
-async function runPlatformCollection(platform) {
-    const button = document.getElementById(`${platform}-collect-btn`);
-    button.disabled = true;
-    button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Collecting...`;
-
-    try {
-        const response = await fetch(`/api/collect/${platform}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        // Show success message
-        alert(`Successfully collected ${platform} data!`);
-        
-        // Reload the page to show new data
-        window.location.reload();
-    } catch (error) {
-        console.error('Collection failed:', error);
-        alert(`Failed to collect ${platform} data: ${error.message}`);
-        
-        // Reset button state
-        button.disabled = false;
-        button.innerHTML = `<i class="fab fa-${platform}"></i> Collect ${platform.charAt(0).toUpperCase() + platform.slice(1)} Data`;
-    }
-}
-</script>
+<!-- Dashboard JavaScript -->
+<script src="/js/dashboard.js"></script>
 
 <%- include('layouts/footer') %> 
