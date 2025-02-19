@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
+const errorHandler = require('./middleware/errorHandler');
+const requestLogger = require('./middleware/requestLogger');
+const securityLogger = require('./middleware/securityLogger');
+const apiErrorHandler = require('./middleware/apiErrorHandler');
 
 const app = express();
 
@@ -11,6 +15,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(requestLogger);
+app.use(securityLogger);
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -43,10 +49,34 @@ app.use('/', viewRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/social', socialMediaRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+// API error handler (before the main error handler)
+app.use(apiErrorHandler);
+
+// 404 handler
+app.use((req, res, next) => {
+    res.status(404).render('errors/404');
+});
+
+// Error handling middleware (should be last)
+app.use(errorHandler);
+
+// Add error monitoring for uncaught exceptions
+process.on('uncaughtException', (error) => {
+    logger.fatal('Uncaught Exception:', {
+        error: error.message,
+        stack: error.stack
+    });
+    // Give the logger time to write before exiting
+    setTimeout(() => {
+        process.exit(1);
+    }, 1000);
+});
+
+process.on('unhandledRejection', (error) => {
+    logger.fatal('Unhandled Rejection:', {
+        error: error.message,
+        stack: error.stack
+    });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -1,0 +1,13 @@
+<%- include('../layouts/header') %>
+
+<div class="container mt-5 text-center">
+    <div class="col-md-6 offset-md-3">
+        <h1 class="display-1">429</h1>
+        <h2 class="mb-4">Too Many Requests</h2>
+        <p class="lead mb-4"><%= error || 'You have made too many requests. Please try again later.' %></p>
+        <p class="text-muted">Try again in a few minutes</p>
+        <a href="javascript:history.back()" class="btn btn-primary">Go Back</a>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %> 

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const SocialMetrics = require('../models/SocialMetrics');
+const catchAsync = require('../utils/catchAsync');
+const logger = require('../utils/logger');
 
 // Home page
 router.get('/', (req, res) => {
@@ -14,25 +16,36 @@ router.get('/login', (req, res) => {
 });
 
 // Dashboard page (protected)
-router.get('/dashboard', auth, async (req, res) => {
-    try {
-        const metrics = {};
-        const platforms = ['tiktok', 'facebook', 'instagram', 'twitter'];
+router.get('/dashboard', auth, catchAsync(async (req, res) => {
+    const metrics = {};
+    const platforms = ['tiktok', 'facebook', 'instagram', 'twitter'];
 
+    try {
         for (const platform of platforms) {
             const latestMetric = await SocialMetrics.findOne({ platform })
                 .sort({ timestamp: -1 });
             metrics[platform] = latestMetric?.metrics || null;
         }
 
+        logger.info('Dashboard accessed', {
+            userId: req.user._id,
+            platforms: Object.keys(metrics).filter(k => metrics[k])
+        });
+
         res.render('dashboard', { 
             user: req.user,
             metrics: metrics
         });
     } catch (error) {
-        res.status(500).render('error', { error: error.message });
+        logger.error('Dashboard metrics fetch failed', {
+            userId: req.user._id,
+            error: error.message
+        });
+        res.status(500).render('errors/500', { 
+            error: 'Failed to fetch social media metrics' 
+        });
     }
-});
+}));
 
 // Logout
 router.get('/logout', (req, res) => {

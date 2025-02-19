@@ -1,0 +1,12 @@
+<%- include('../layouts/header') %>
+
+<div class="container mt-5 text-center">
+    <div class="col-md-6 offset-md-3">
+        <h1 class="display-1">400</h1>
+        <h2 class="mb-4">Bad Request</h2>
+        <p class="lead mb-4"><%= error || 'The request could not be understood by the server.' %></p>
+        <a href="javascript:history.back()" class="btn btn-primary">Go Back</a>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %> 

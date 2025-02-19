@@ -4,6 +4,8 @@ const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const catchAsync = require('../utils/catchAsync');
+const logger = require('../utils/logger');
 
 // Validation rules
 const registerValidation = [
@@ -13,45 +15,49 @@ const registerValidation = [
 ];
 
 // Register route
-router.post('/register', registerValidation, async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        const { username, email, password } = req.body;
-
-        // Check if user already exists
-        const existingUser = await User.findOne({ 
-            $or: [{ email }, { username }] 
+router.post('/register', registerValidation, catchAsync(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn('Registration validation failed', {
+            errors: errors.array(),
+            ip: req.ip
         });
-        
-        if (existingUser) {
-            return res.status(400).json({ 
-                message: 'User already exists' 
-            });
-        }
-
-        // Create new user
-        const user = new User({ username, email, password });
-        await user.save();
-
-        // Generate token
-        const token = jwt.sign(
-            { userId: user._id }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: '24h' }
-        );
-
-        res.status(201).json({ 
-            message: 'User created successfully',
-            token 
+        return res.status(400).render('errors/400', { 
+            error: errors.array()[0].msg 
         });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
-});
+
+    const { username, email, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ 
+        $or: [{ email }, { username }] 
+    });
+    
+    if (existingUser) {
+        logger.warn('Registration attempt with existing user', {
+            email,
+            username,
+            ip: req.ip
+        });
+        return res.status(400).render('errors/400', { 
+            error: 'User already exists' 
+        });
+    }
+
+    // Create new user
+    const user = new User({ username, email, password });
+    await user.save();
+
+    logger.info('New user registered', {
+        userId: user._id,
+        username,
+        email
+    });
+
+    // Redirect to login
+    res.redirect('/login');
+}));
 
 // Login route
 router.post('/login', async (req, res) => {
