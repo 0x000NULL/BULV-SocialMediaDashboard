@@ -22,6 +22,17 @@
                             <a class="nav-link" href="/dashboard">Dashboard</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="/historical">Historical Data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/upload">Upload Data</a>
+                        </li>
+                        <% if (locals.user.role === 'admin') { %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/logs">Activity Logs</a>
+                            </li>
+                        <% } %>
+                        <li class="nav-item">
                             <a class="nav-link" href="/logout">Logout</a>
                         </li>
                     <% } else { %>

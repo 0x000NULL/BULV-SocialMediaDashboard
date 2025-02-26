@@ -46,10 +46,14 @@ mongoose.connect(process.env.MONGODB_URI, {
 const viewRoutes = require('./routes/views');
 const authRoutes = require('./routes/auth');
 const socialMediaRoutes = require('./routes/socialMedia');
+const dataRoutes = require('./routes/data');
+const logsRoutes = require('./routes/logs');
 
 app.use('/', viewRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/social', socialMediaRoutes);
+app.use('/api/data', dataRoutes);
+app.use('/logs', logsRoutes);
 
 // API error handler (before the main error handler)
 app.use(apiErrorHandler);

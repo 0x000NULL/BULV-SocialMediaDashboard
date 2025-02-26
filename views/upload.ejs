@@ -1,0 +1,207 @@
+<%- include('layouts/header') %>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">Upload Social Media Data</h1>
+            <p class="text-muted">Upload CSV or Excel files with your social media metrics data</p>
+        </div>
+    </div>
+
+    <!-- Data Upload Section -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Upload Custom Data</h5>
+            <p class="text-muted">Upload CSV or Excel files with your own social media metrics data</p>
+            
+            <form id="upload-form" enctype="multipart/form-data" class="row g-3">
+                <div class="col-md-4">
+                    <label for="upload-platform" class="form-label">Platform</label>
+                    <select class="form-select" id="upload-platform" name="platform">
+                        <option value="facebook">Facebook</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="tiktok">TikTok</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="dataFile" class="form-label">Data File (CSV or Excel)</label>
+                    <input class="form-control" type="file" id="dataFile" name="dataFile" accept=".csv,.xlsx,.xls">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="d-grid gap-2 w-100">
+                        <button type="button" id="upload-btn" class="btn btn-primary">Upload Data</button>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="mt-3">
+                <p class="mb-2">Need a template? Download a sample file:</p>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Download Template
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/api/data/download-template?platform=facebook">Facebook Template</a></li>
+                        <li><a class="dropdown-item" href="/api/data/download-template?platform=instagram">Instagram Template</a></li>
+                        <li><a class="dropdown-item" href="/api/data/download-template?platform=twitter">Twitter Template</a></li>
+                        <li><a class="dropdown-item" href="/api/data/download-template?platform=tiktok">TikTok Template</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload History Section -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Recent Uploads</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Platform</th>
+                            <th>File Name</th>
+                            <th>Records</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upload-history">
+                        <!-- Upload history will be populated dynamically -->
+                        <tr>
+                            <td colspan="5" class="text-center">No recent uploads</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 id="loading-message">Uploading data...</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener for upload button
+        document.getElementById('upload-btn').addEventListener('click', uploadData);
+    });
+    
+    // Upload data
+    async function uploadData() {
+        const platform = document.getElementById('upload-platform').value;
+        const fileInput = document.getElementById('dataFile');
+        
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('Please select a file to upload');
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('platform', platform);
+        formData.append('dataFile', file);
+        
+        // Show loading modal
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        document.getElementById('loading-message').textContent = 'Uploading data...';
+        loadingModal.show();
+        
+        try {
+            const response = await fetch('/api/data/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            // Hide loading modal
+            loadingModal.hide();
+            
+            if (response.ok) {
+                alert(`Data uploaded successfully! ${result.entriesCount} entries processed.`);
+                // Reset file input
+                fileInput.value = '';
+                
+                // Add to upload history
+                updateUploadHistory({
+                    date: new Date().toLocaleString(),
+                    platform: platform,
+                    fileName: file.name,
+                    records: result.entriesCount,
+                    status: 'Success'
+                });
+            } else {
+                throw new Error(result.error || 'Upload failed');
+            }
+        } catch (error) {
+            loadingModal.hide();
+            alert('Error uploading data: ' + error.message);
+            console.error('Error uploading data:', error);
+            
+            // Add to upload history with error
+            updateUploadHistory({
+                date: new Date().toLocaleString(),
+                platform: platform,
+                fileName: file.name,
+                records: 0,
+                status: 'Failed: ' + error.message
+            });
+        }
+    }
+    
+    // Update upload history table
+    function updateUploadHistory(upload) {
+        const historyTable = document.getElementById('upload-history');
+        
+        // Remove "No recent uploads" row if it exists
+        if (historyTable.querySelector('td[colspan="5"]')) {
+            historyTable.innerHTML = '';
+        }
+        
+        // Create new row
+        const row = document.createElement('tr');
+        
+        // Add cells
+        const dateCell = document.createElement('td');
+        dateCell.textContent = upload.date;
+        row.appendChild(dateCell);
+        
+        const platformCell = document.createElement('td');
+        platformCell.textContent = upload.platform.charAt(0).toUpperCase() + upload.platform.slice(1);
+        row.appendChild(platformCell);
+        
+        const fileNameCell = document.createElement('td');
+        fileNameCell.textContent = upload.fileName;
+        row.appendChild(fileNameCell);
+        
+        const recordsCell = document.createElement('td');
+        recordsCell.textContent = upload.records;
+        row.appendChild(recordsCell);
+        
+        const statusCell = document.createElement('td');
+        if (upload.status === 'Success') {
+            statusCell.innerHTML = '<span class="badge bg-success">Success</span>';
+        } else {
+            statusCell.innerHTML = `<span class="badge bg-danger">${upload.status}</span>`;
+        }
+        row.appendChild(statusCell);
+        
+        // Add row to table
+        historyTable.insertBefore(row, historyTable.firstChild);
+    }
+</script>
+
+<%- include('layouts/footer') %> 

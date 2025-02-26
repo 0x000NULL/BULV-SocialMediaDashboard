@@ -53,6 +53,32 @@ router.get('/dashboard', auth, catchAsync(async (req, res) => {
     }
 }));
 
+// Historical data page (protected)
+router.get('/historical', auth, (req, res) => {
+    logger.info('Historical data page accessed', {
+        userId: req.user._id,
+        username: req.user.username,
+        action: 'page_view'
+    });
+    
+    res.render('historical', { 
+        user: req.user
+    });
+});
+
+// Upload data page (protected)
+router.get('/upload', auth, (req, res) => {
+    logger.info('Upload data page accessed', {
+        userId: req.user._id,
+        username: req.user.username,
+        action: 'page_view'
+    });
+    
+    res.render('upload', { 
+        user: req.user
+    });
+});
+
 // Logout
 router.get('/logout', (req, res) => {
     res.clearCookie('token');

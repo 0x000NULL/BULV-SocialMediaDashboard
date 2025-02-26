@@ -1,5 +1,32 @@
 #CHANGELOG
 
+## Modal Handling Fix for Historical Data Page - 2024-03-17 14:30 UTC (v2.5.47)
+
+### Bug Fixes
+#### Historical Data Page Modal Fix
+- Fixed issue with loading modal not disappearing after data loads
+- Implemented direct DOM manipulation approach for modal handling
+- Replaced Bootstrap Modal API with manual modal control
+- Added comprehensive modal cleanup to prevent UI artifacts
+
+#### Technical Implementation
+- Created dedicated `hideLoadingModal()` function for centralized modal cleanup
+- Implemented proper backdrop removal
+- Added ARIA attribute management for accessibility
+- Enhanced error handling to ensure modal cleanup in all scenarios
+
+### Code Quality Improvements
+- Improved modal state management
+- Enhanced user experience with more reliable UI interactions
+- Better separation of concerns for modal handling
+- Improved error recovery during data loading
+
+### Notes
+- No breaking changes to functionality
+- Improved reliability of the historical data page
+- Better user experience with proper loading indicators
+- Fixed potential UI blocking issues
+
 ## Faker Deprecation Fixes and Sample Data Optimization - 2024-03-16 12:00 UTC (v2.4.23)
 
 ### Sample Data Generation Improvements

@@ -1,0 +1,417 @@
+<%- include('layouts/header') %>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">Historical Data Analysis</h1>
+            <p class="text-muted">View and analyze historical social media metrics</p>
+        </div>
+    </div>
+
+    <!-- Platform and Date Range Selection -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Select Platform and Date Range</h5>
+            <form id="filter-form" class="row g-3">
+                <div class="col-md-3">
+                    <label for="platform" class="form-label">Platform</label>
+                    <select class="form-select" id="platform" name="platform">
+                        <option value="facebook">Facebook</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="tiktok">TikTok</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="d-grid gap-2 w-100">
+                        <button type="button" id="load-data-btn" class="btn btn-primary">Load Data</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Metric Selection -->
+    <div class="card mb-4" id="metric-selection" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title">Select Metrics to Display</h5>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="btn-group-toggle d-flex flex-wrap gap-2" id="metrics-buttons">
+                        <!-- Metrics buttons will be added dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mb-4" id="charts-container" style="display: none;">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Metrics Over Time</h5>
+                    <div class="chart-container" style="position: relative; height:400px;">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="card" id="data-table-section" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title">Raw Data</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <!-- Metric columns will be added dynamically -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Export Button -->
+            <div class="d-flex justify-content-end mt-3">
+                <button id="export-csv-btn" class="btn btn-success">
+                    <i class="fas fa-file-export me-1"></i> Export to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 id="loading-message">Loading data...</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Global variables
+    let metricsChart = null;
+    let historicalData = [];
+    let selectedMetrics = [];
+    
+    // Available metrics with display names and colors
+    const availableMetrics = {
+        'followers': { name: 'Followers', color: '#4e73df' },
+        'following': { name: 'Following', color: '#1cc88a' },
+        'likes': { name: 'Likes', color: '#36b9cc' },
+        'comments': { name: 'Comments', color: '#f6c23e' },
+        'shares': { name: 'Shares', color: '#e74a3b' },
+        'views': { name: 'Views', color: '#6f42c1' },
+        'engagement_rate': { name: 'Engagement Rate', color: '#fd7e14' },
+        'profile_views': { name: 'Profile Views', color: '#20c997' },
+        'reach': { name: 'Reach', color: '#6610f2' },
+        'impressions': { name: 'Impressions', color: '#e83e8c' }
+    };
+    
+    // Initialize date inputs with last 30 days
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        document.getElementById('endDate').valueAsDate = today;
+        document.getElementById('startDate').valueAsDate = thirtyDaysAgo;
+        
+        // Add event listeners
+        document.getElementById('load-data-btn').addEventListener('click', loadHistoricalData);
+        document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
+    });
+    
+    // Load historical data from API
+    async function loadHistoricalData() {
+        const platform = document.getElementById('platform').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!platform || !startDate || !endDate) {
+            alert('Please select platform and date range');
+            return;
+        }
+        
+        // Show loading modal using direct DOM manipulation
+        const loadingModalEl = document.getElementById('loadingModal');
+        loadingModalEl.style.display = 'block';
+        loadingModalEl.classList.add('show');
+        loadingModalEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        
+        // Add backdrop if it doesn't exist
+        let backdrop = document.querySelector('.modal-backdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.classList.add('modal-backdrop', 'fade', 'show');
+            document.body.appendChild(backdrop);
+        }
+        
+        try {
+            const response = await fetch(`/api/data/historical/${platform}?startDate=${startDate}&endDate=${endDate}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            
+            historicalData = await response.json();
+            
+            // Hide loading modal using direct DOM manipulation
+            hideLoadingModal();
+            
+            if (historicalData.length === 0) {
+                alert('No data available for the selected period');
+                return;
+            }
+            
+            // Show metric selection and populate buttons
+            document.getElementById('metric-selection').style.display = 'block';
+            populateMetricButtons();
+            
+            // Select default metrics and update chart
+            selectedMetrics = ['followers', 'engagement_rate'];
+            updateSelectedMetricButtons();
+            updateChart();
+            updateDataTable();
+            
+            // Show charts and data table
+            document.getElementById('charts-container').style.display = 'block';
+            document.getElementById('data-table-section').style.display = 'block';
+            
+        } catch (error) {
+            // Hide loading modal in case of error
+            hideLoadingModal();
+            
+            alert('Error loading data: ' + error.message);
+            console.error('Error loading data:', error);
+        }
+    }
+    
+    // Helper function to hide the modal
+    function hideLoadingModal() {
+        const loadingModalEl = document.getElementById('loadingModal');
+        loadingModalEl.style.display = 'none';
+        loadingModalEl.classList.remove('show');
+        loadingModalEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        
+        // Remove backdrop
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+    }
+    
+    // Populate metric selection buttons
+    function populateMetricButtons() {
+        const container = document.getElementById('metrics-buttons');
+        container.innerHTML = '';
+        
+        Object.keys(availableMetrics).forEach(metric => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-outline-primary metric-btn';
+            button.dataset.metric = metric;
+            button.textContent = availableMetrics[metric].name;
+            
+            button.addEventListener('click', function() {
+                toggleMetric(metric);
+            });
+            
+            container.appendChild(button);
+        });
+    }
+    
+    // Toggle metric selection
+    function toggleMetric(metric) {
+        const index = selectedMetrics.indexOf(metric);
+        
+        if (index === -1) {
+            selectedMetrics.push(metric);
+        } else {
+            selectedMetrics.splice(index, 1);
+        }
+        
+        updateSelectedMetricButtons();
+        updateChart();
+        updateDataTable();
+    }
+    
+    // Update selected metric buttons
+    function updateSelectedMetricButtons() {
+        document.querySelectorAll('.metric-btn').forEach(button => {
+            const metric = button.dataset.metric;
+            
+            if (selectedMetrics.includes(metric)) {
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-primary');
+            } else {
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-outline-primary');
+            }
+        });
+    }
+    
+    // Update chart with selected metrics
+    function updateChart() {
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        
+        // Prepare data for chart
+        const labels = historicalData.map(item => {
+            const date = new Date(item.timestamp);
+            return date.toLocaleDateString();
+        });
+        
+        const datasets = selectedMetrics.map(metric => {
+            return {
+                label: availableMetrics[metric].name,
+                data: historicalData.map(item => item.metrics[metric] || 0),
+                borderColor: availableMetrics[metric].color,
+                backgroundColor: availableMetrics[metric].color + '20',
+                borderWidth: 2,
+                tension: 0.1,
+                fill: false
+            };
+        });
+        
+        // Destroy existing chart if it exists
+        if (metricsChart) {
+            metricsChart.destroy();
+        }
+        
+        // Create new chart
+        metricsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+    
+    // Update data table with selected metrics
+    function updateDataTable() {
+        const table = document.getElementById('data-table');
+        const thead = table.querySelector('thead tr');
+        const tbody = table.querySelector('tbody');
+        
+        // Clear existing table
+        thead.innerHTML = '<th>Date</th>';
+        tbody.innerHTML = '';
+        
+        // Add headers for selected metrics
+        selectedMetrics.forEach(metric => {
+            const th = document.createElement('th');
+            th.textContent = availableMetrics[metric].name;
+            thead.appendChild(th);
+        });
+        
+        // Add data rows
+        historicalData.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Add date cell
+            const dateCell = document.createElement('td');
+            dateCell.textContent = new Date(item.timestamp).toLocaleDateString();
+            row.appendChild(dateCell);
+            
+            // Add metric cells
+            selectedMetrics.forEach(metric => {
+                const cell = document.createElement('td');
+                cell.textContent = item.metrics[metric] || 0;
+                row.appendChild(cell);
+            });
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Export data to CSV
+    function exportToCSV() {
+        if (historicalData.length === 0 || selectedMetrics.length === 0) {
+            alert('No data to export');
+            return;
+        }
+        
+        // Prepare CSV content
+        const headers = ['Date', ...selectedMetrics.map(m => availableMetrics[m].name)];
+        
+        const rows = historicalData.map(item => {
+            const date = new Date(item.timestamp).toLocaleDateString();
+            const values = selectedMetrics.map(metric => item.metrics[metric] || 0);
+            return [date, ...values];
+        });
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+        
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `social_media_data_${document.getElementById('platform').value}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+<%- include('layouts/footer') %> 
